@@ -25,6 +25,7 @@ public class MessageMapper {
         .timestamp(message.getTimestamp())
         .roomId(roomId)
         .senderId(senderId)
+      .senderName(message.getSender() != null ? message.getSender().getName() : null)
         .build();
   }
 

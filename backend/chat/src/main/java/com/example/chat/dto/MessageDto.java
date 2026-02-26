@@ -18,4 +18,5 @@ public class MessageDto {
   private LocalDateTime timestamp;
   private Long roomId;
   private Long senderId;
+  private String senderName;
 }
