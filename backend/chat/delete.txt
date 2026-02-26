@@ -1,0 +1,10 @@
+1. To manage the messages with the table.
+  @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Message> messages = new ArrayList<>();
+
+
+2. To delete the many relations if the user is deleted
+   @OnDelete(action = OnDeleteAction.CASCADE) (on child side (many side))
+   -> better as it is going be done on database itself, with 'cascade=CascadeType.REMOVE (applied on Parent side(one))' 
+      hibernate loads them and run delete query for all of them, so that takes more memory and time
+
