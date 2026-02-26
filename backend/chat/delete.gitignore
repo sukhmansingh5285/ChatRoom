@@ -1,0 +1,48 @@
+1. To manage the messages with the table.
+  @OneToMany(mappedBy = "room", cascade = CascadeType.ALL, orphanRemoval = true)
+  private List<Message> messages = new ArrayList<>();
+
+
+2. To delete the many relations if the user is deleted
+   @OnDelete(action = OnDeleteAction.CASCADE) (on child side (many side))
+   -> better as it is going be done on database itself, with 'cascade=CascadeType.REMOVE (applied on Parent side(one))' 
+      hibernate loads them and run delete query for all of them, so that takes more memory and time
+
+3. Issues while rendering the react components in browser due to sockets =
+   Issue #1 — PRIMARY (causes the blank page): sockjs-client crashes at module load time
+
+The sockjs-client library's entry file (node_modules/sockjs-client/lib/entry.js) contains this code at the top level:
+if ('_sockjs_onload' in global) {
+  setTimeout(global._sockjs_onload, 1);
+}
+
+
+global is a Node.js-only variable — it does not exist in the browser. Vite (unlike webpack) does not polyfill Node.js globals. When your app loads, this line throws:
+ReferenceError: global is not defined
+
+Since socket.ts imports sockjs-client at the top level, and ChatPage.tsx imports socket.ts, this crash propagates up the entire module chain → App.tsx → main.tsx → React never mounts → blank page.
+
+Fix: Add define: { global: 'globalThis' } in vite.config.ts.
+
+Issue #2 — loadRooms accessed before declaration (ESLint error)
+
+In ChatPage.tsx, loadRooms is called inside the useEffect at line 43, but the function is declared at line 78. The ESLint react-hooks plugin flags this as an error. While it works at runtime (the callback runs after render), it's a code ordering issue.
+
+Issue #3 — Missing .catch() on promises in useEffects
+
+In ChatPage.tsx, three .then() calls have no .catch():
+
+messageApi.getHistory(selectedRoomId).then(...)
+roomMembersApi.getRoomMembers(selectedRoomId).then(...)
+connectToRoom(selectedRoomId, ...).then(...)
+If the backend is unreachable when a room is selected, these will produce unhandled promise rejection warnings in the console.
+
+Summary: Issue #1 is the sole cause of the blank page. Issues #2 and #3 are code quality problems that would surface after fixing #1. Let me know and I'll apply the fixes.
+
+
+
+ANSWER = 
+Blank page fix — Added (define: { global: 'globalThis' } ) to vite.config.ts so sockjs-client's reference to global resolves in the browser.
+loadRooms before declaration — Moved the function declaration above the useEffect that calls it in ChatPage.tsx.
+Missing .catch() — Added .catch() handlers to all fire-and-forget promises (getCurrentUser, getHistory, getRoomMembers, connectToRoom, and room loading).
+setState-in-effect — Inlined the room-loading logic in the useEffect as a .then() chain instead of calling the async helper directly, satisfying the react-hooks/set-state-in-effect rule.
