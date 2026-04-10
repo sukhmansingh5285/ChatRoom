@@ -1,7 +1,7 @@
-import { http } from './http'
+import api from "./http";
 
 // GET /api/message/history/:roomId
 export const getHistory = async (roomId: number) => {
-  const res = await http.get(`/api/message/history/${roomId}`)
-  return res.data
-}
+  const { data } = await api.get(`/message/history/${roomId}`);
+  return data;
+};

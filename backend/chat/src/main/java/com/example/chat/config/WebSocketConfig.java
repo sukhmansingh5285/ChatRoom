@@ -15,7 +15,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
     // The endpoint our frontend (React) will use to connect:
     // ws://localhost:8071/ws-chat
     registry.addEndpoint("/ws-chat")
-        .setAllowedOrigins("http://localhost:3001")
+        .setAllowedOrigins("http://localhost:3000")
         .withSockJS(); // Fallback for browsers that don't support WebSockets
   }
 
